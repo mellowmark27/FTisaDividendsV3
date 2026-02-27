@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Freetrade Dividend Tracker · Portfolio Analytics Dashboard</title>
+<meta name="description" content="Freetrade Dividend Income Dashboard — track your ISA dividend income, portfolio analytics, and dividend projections. Visualise your Freetrade dividend tracker data with interactive charts.">
+<meta name="keywords" content="Freetrade Dividend Tracker, Portfolio Analytics, Freetrade Dividend Income Dashboard, ISA Dividend Income, Dividend Projections, Freetrade CSV, Portfolio Income Tracker, Dividend Portfolio Analytics">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f0f2f7;
+  --surface:  #ffffff;
+  --surface2: #f7f8fc;
+  --border:   #e8eaf2;
+  --green:    #00c896;
+  --green-dk: #00a87e;
+  --green-dim:#e6faf5;
+  --blue:     #2563eb;
+  --blue-dim: #eff4ff;
+  --amber:    #f59e0b;
+  --amber-dim:#fffbeb;
+  --red:      #ef4444;
+  --red-dim:  #fef2f2;
+  --ink:      #0f172a;
+  --ink2:     #334155;
+  --muted:    #94a3b8;
+  --pill-bg:  #f1f5f9;
+  --shadow:   0 1px 3px rgba(15,23,42,0.06), 0 4px 16px rgba(15,23,42,0.04);
+  --shadow-md:0 4px 24px rgba(15,23,42,0.10);
+  --radius:   18px;
+  --radius-sm:12px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--green) 0%, var(--green-dk) 100%);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-icon svg { width: 18px; height: 18px; }
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: block;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.topbar-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: linear-gradient(160deg, #0f172a 0%, #1e3a5f 60%, #0f2d1f 100%);
+  padding: 32px 20px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(0,200,150,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 60% at 10% 80%, rgba(37,99,235,0.15) 0%, transparent 70%);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,200,150,0.4), transparent);
+}
+
+.hero-content { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.hero-title {
+  font-size: clamp(22px, 5vw, 36px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.hero-title span { color: var(--green); }
+
+.hero-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+/* ── HERO KPI ── */
+.hero-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.hero-kpi {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transform: translateY(12px);
+  animation: slideUp 0.5s ease forwards;
+}
+.hero-kpi:nth-child(1){animation-delay:.1s}
+.hero-kpi:nth-child(2){animation-delay:.2s}
+.hero-kpi:nth-child(3){animation-delay:.3s}
+.hero-kpi:nth-child(4){animation-delay:.4s}
+
+@keyframes slideUp {to{opacity:1;transform:translateY(0)}}
+
+.hero-kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hero-kpi-value {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(18px, 4vw, 26px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+
+.hero-kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 2px 7px;
+  margin-top: 5px;
+}
+.hero-kpi-badge.up   { background: rgba(0,200,150,0.2); color: var(--green); }
+.hero-kpi-badge.info { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); }
+
+/* ── MAIN CONTENT ── */
+.content {
+  padding: 20px 16px;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  opacity: 0;
+  animation: slideUp 0.5s ease forwards;
+}
+.card:nth-child(1){animation-delay:.15s}
+.card:nth-child(2){animation-delay:.25s}
+.card:nth-child(3){animation-delay:.3s}
+.card:nth-child(4){animation-delay:.35s}
+.card:nth-child(5){animation-delay:.4s}
+.card:nth-child(6){animation-delay:.45s}
+
+.card-header {
+  padding: 18px 20px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+
+.card-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  background: var(--pill-bg);
+  color: var(--ink2);
+  border-radius: 20px;
+  padding: 4px 10px;
+  letter-spacing: 0.5px;
+}
+
+.card-body { padding: 16px 20px 20px; }
+
+/* chart wrapper */
+.cw { position: relative; }
+
+/* ── SEGMENT TABS ── */
+.seg-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--pill-bg);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 12px 20px 0;
+}
+
+.seg-tab {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+}
+
+.seg-tab.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+/* ── STAT ROW (inside cards) ── */
+.stat-row {
+  display: flex;
+  align-items: center;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.stat-row:last-child { border-bottom: none; }
+
+.stat-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.stat-info { flex: 1; }
+.stat-name { font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -0.1px; }
+.stat-desc { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 1px; }
+
+.stat-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+/* ── MINI BAR ── */
+.mini-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+}
+.mini-bar-label { font-size: 12px; font-weight: 600; color: var(--ink); width: 130px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-bar-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.mini-bar-fill  { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(0.22,1,0.36,1); width: 0; }
+.mini-bar-val   { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); width: 48px; text-align: right; flex-shrink: 0; }
+
+/* ── HEATMAP ── */
+.hm-grid {
+  display: grid;
+  grid-template-columns: 34px repeat(12, 1fr);
+  gap: 3px;
+}
+.hm-yl { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--muted); display:flex; align-items:center; justify-content:flex-end; padding-right:5px; }
+.hm-ml { font-family:'JetBrains Mono',monospace; font-size:8px; color:var(--muted); text-align:center; padding-bottom:3px; }
+.hm-cell {
+  height: 26px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform .12s, opacity .12s;
+  position: relative;
+}
+.hm-cell:hover { transform: scale(1.15); z-index: 10; }
+.hm-cell:hover::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 5px); left: 50%; transform: translateX(-50%);
+  background: var(--ink);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 8px; border-radius: 6px;
+  white-space: nowrap; pointer-events: none; z-index: 100;
+}
+
+/* ── PEAK PILL ── */
+.peak-pill {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--green-dim);
+  border: 1px solid rgba(0,200,150,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-top: 14px;
+}
+.peak-left {}
+.peak-label { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--green-dk); letter-spacing:1.5px; text-transform:uppercase; }
+.peak-month { font-size:13px; font-weight:700; color:var(--ink); margin-top:2px; }
+.peak-val   { font-family: 'Inter', sans-serif; font-size:22px; font-weight:800; color:var(--green-dk); letter-spacing:-0.3px; }
+
+/* ── TYPE PILLS ── */
+.type-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.type-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--pill-bg);
+  border-radius: 20px;
+  padding: 6px 12px;
+}
+.type-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.type-name { font-size: 12px; font-weight: 600; color: var(--ink2); }
+.type-val  { font-family:'JetBrains Mono',monospace; font-size: 11px; color: var(--muted); margin-left:2px; }
+
+/* ── UPLOAD ZONE ── */
+.upload-section {
+  margin: 0 0 24px;
+}
+
+.upload-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border: 2px dashed var(--border);
+  transition: border-color .2s, box-shadow .2s;
+  cursor: pointer;
+}
+.upload-card:hover, .upload-card.drag-over {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(0,200,150,0.08);
+}
+
+.upload-inner {
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.upload-icon {
+  width: 48px; height: 48px;
+  background: var(--green-dim);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.upload-icon svg { width: 24px; height: 24px; color: var(--green-dk); }
+
+.upload-title { font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.2px; }
+.upload-desc  { font-family:'JetBrains Mono',monospace; font-size: 10px; color: var(--muted); letter-spacing: 0.5px; line-height: 1.6; }
+
+.upload-btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.upload-btn-main {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--green); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 11px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, transform .1s;
+  letter-spacing: -0.2px;
+}
+.upload-btn-main:hover  { background: var(--green-dk); }
+.upload-btn-main:active { transform: scale(0.97); }
+.upload-btn-main svg { width:15px; height:15px; }
+
+#csv-input { display: none; }
+
+#upload-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: none;
+  text-align: center;
+}
+#upload-status.ok  { background: var(--green-dim); color: var(--green-dk); border: 1px solid rgba(0,200,150,0.25); display: block; }
+#upload-status.err { background: var(--red-dim);   color: var(--red);      border: 1px solid rgba(239,68,68,0.25);  display: block; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  padding: 0 20px 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.8;
+}
+
+/* ── DIVIDER ROW ── */
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 0 2px;
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:480px){
+  .hero { padding: 24px 16px 32px; }
+  .hero-kpi-grid { gap: 8px; }
+  .hero-kpi { padding: 12px 14px; }
+  .content { padding: 16px 12px; }
+  .mini-bar-label { width: 100px; }
+}
+
+/* chart tooltip style via Chart.js global */
+
+/* ── CHART GROW ANIMATION ── */
+@keyframes chartGrow {
+  from { opacity: 0; transform: scaleY(0.85) translateY(10px); }
+  to   { opacity: 1; transform: scaleY(1) translateY(0); }
+}
+.card.chart-animate {
+  animation: chartGrow 0.55s cubic-bezier(0.22,1,0.36,1) forwards !important;
+  transform-origin: bottom;
+}
+
+/* ── PROJECTION CARD ── */
+.projection-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.proj-stat {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+}
+.proj-stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.proj-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.proj-stat-value.highlight { color: var(--green-dk); }
+.proj-stat-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.proj-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.3px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  line-height: 1.6;
+}
+.proj-growth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  border-radius: 20px;
+  padding: 3px 8px;
+  margin-top: 6px;
+  background: rgba(0,200,150,0.15);
+  color: var(--green-dk);
+}
+
+/* ── COMPARISON CARD ── */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.compare-col {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.compare-col.current { border-color: rgba(0,200,150,0.3); background: var(--green-dim); }
+.compare-col-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.compare-col.current .compare-col-label { color: var(--green-dk); }
+.compare-col-year {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink2);
+  margin-bottom: 8px;
+}
+.compare-col.current .compare-col-year { color: var(--ink); }
+.compare-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.compare-stat:last-child { border-bottom: none; }
+.compare-stat-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.compare-stat-val {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.2px;
+}
+.compare-stat-val.green { color: var(--green-dk); }
+.compare-delta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--pill-bg);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+}
+.compare-delta-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  flex: 1;
+  letter-spacing: 0.5px;
+}
+.compare-delta-val {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+.compare-delta-val.pos { color: var(--green-dk); }
+.compare-delta-val.neg { color: var(--red); }
+.privacy-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(37,99,235,0.07);
+  border: 1px solid rgba(37,99,235,0.15);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--blue);
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+  max-width: 320px;
+  text-align: left;
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+        <polyline points="17 6 23 6 23 12"/>
+      </svg>
+    </div>
+    <div>
+      <span class="brand-name">Freetrade ISA</span>
+      <span class="brand-sub">Dividend Income</span>
+    </div>
+  </div>
+  <div class="topbar-date" id="topbar-range">—</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">Portfolio Summary</div>
+    <div class="hero-title">Dividend <span>Income</span></div>
+    <div class="hero-subtitle" id="hero-sub">Loading data…</div>
+    <div class="hero-kpi-grid">
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Total Received</div>
+        <div class="hero-kpi-value" id="kpi-total">—</div>
+        <div class="hero-kpi-badge info" id="kpi-total-sub">—</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Latest Full Year</div>
+        <div class="hero-kpi-value" id="kpi-year">—</div>
+        <div class="hero-kpi-badge up" id="kpi-yoy">—</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Monthly Average</div>
+        <div class="hero-kpi-value" id="kpi-avg">—</div>
+        <div class="hero-kpi-badge info">Latest full year</div>
+      </div>
+      <div class="hero-kpi">
+        <div class="hero-kpi-label">Holdings</div>
+        <div class="hero-kpi-value" id="kpi-holdings">—</div>
+        <div class="hero-kpi-badge info" id="kpi-payments">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content">
+
+  <!-- Monthly Line Chart with tabs -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Monthly Income</div>
+        <div class="card-sub">All payments · excl. capital</div>
+      </div>
+      <div class="card-tag" id="monthly-total-tag">—</div>
+    </div>
+    <div class="cw card-body" style="height:200px;padding-top:8px">
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Annual & Quarterly with tabs -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Income Growth</div>
+        <div class="card-sub">Year &amp; quarter comparison</div>
+      </div>
+    </div>
+    <div class="seg-tabs" id="growth-tabs">
+      <button class="seg-tab active" data-chart="annual">Annual</button>
+      <button class="seg-tab" data-chart="quarterly">Quarterly</button>
+    </div>
+    <div class="cw card-body" style="height:190px;padding-top:8px">
+      <canvas id="annualChart"></canvas>
+      <canvas id="quarterChart" style="display:none"></canvas>
+    </div>
+  </div>
+
+  <!-- Heat Map -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Monthly Heat Map</div>
+        <div class="card-sub">Income intensity by month &amp; year</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="heatmap"></div>
+    </div>
+  </div>
+
+  <!-- Income by Type -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Income by Type</div>
+        <div class="card-sub">Dividend · property · interest</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:16px;align-items:center">
+        <div style="width:130px;height:130px;flex-shrink:0">
+          <canvas id="donutChart"></canvas>
+        </div>
+        <div style="flex:1">
+          <div class="type-pills" id="type-pills"></div>
+        </div>
+      </div>
+      <div class="peak-pill">
+        <div class="peak-left">
+          <div class="peak-label">🏆 Best Month</div>
+          <div class="peak-month" id="peak-month">—</div>
+        </div>
+        <div class="peak-val" id="peak-val">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top 25 Holdings -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Top 25 Holdings</div>
+        <div class="card-sub">By dividend income received</div>
+      </div>
+    </div>
+    <div class="card-body" id="topBars" style="padding-top:10px"></div>
+  </div>
+
+  <!-- Dividend Projections -->
+  <div class="card" id="projection-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Dividend Projections</div>
+        <div class="card-sub">Estimated next 12 months · based on last 12 months</div>
+      </div>
+      <div class="card-tag">Forecast</div>
+    </div>
+    <div class="card-body">
+      <div class="projection-grid">
+        <div class="proj-stat">
+          <div class="proj-stat-label">Est. Next 12 Months</div>
+          <div class="proj-stat-value highlight" id="proj-next12">—</div>
+          <div class="proj-stat-sub" id="proj-monthly">≈ — / month</div>
+        </div>
+        <div class="proj-stat">
+          <div class="proj-stat-label">Projected Growth</div>
+          <div class="proj-stat-value" id="proj-growth-val">—</div>
+          <div class="proj-growth-badge" id="proj-growth-badge">vs last 12 months</div>
+        </div>
+      </div>
+      <div class="proj-note" id="proj-note">—</div>
+    </div>
+  </div>
+
+  <!-- Year Comparison -->
+  <div class="card" id="comparison-card">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Year Comparison</div>
+        <div class="card-sub">Current year vs previous year</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="comparison-grid">
+        <div class="compare-col">
+          <div class="compare-col-label">Previous Year</div>
+          <div class="compare-col-year" id="cmp-prev-year">—</div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Total Income</span>
+            <span class="compare-stat-val" id="cmp-prev-total">—</span>
+          </div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Monthly Avg</span>
+            <span class="compare-stat-val" id="cmp-prev-avg">—</span>
+          </div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Best Month</span>
+            <span class="compare-stat-val" id="cmp-prev-best">—</span>
+          </div>
+        </div>
+        <div class="compare-col current">
+          <div class="compare-col-label">Latest Full Year</div>
+          <div class="compare-col-year" id="cmp-cur-year">—</div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Total Income</span>
+            <span class="compare-stat-val green" id="cmp-cur-total">—</span>
+          </div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Monthly Avg</span>
+            <span class="compare-stat-val green" id="cmp-cur-avg">—</span>
+          </div>
+          <div class="compare-stat">
+            <span class="compare-stat-name">Best Month</span>
+            <span class="compare-stat-val green" id="cmp-cur-best">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="compare-delta">
+        <span class="compare-delta-label">Year-on-Year Change</span>
+        <span class="compare-delta-val pos" id="cmp-delta-abs">—</span>
+        <span class="compare-delta-val pos" id="cmp-delta-pct">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Section -->
+  <div class="section-label">Data</div>
+  <div class="upload-section">
+    <div class="upload-card" id="upload-card">
+      <div class="upload-inner">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="upload-title">Update Dashboard</div>
+        <div class="upload-desc">Upload your Freetrade activity-feed CSV export<br>to refresh all charts with new dividend data</div>
+        <div class="privacy-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;flex-shrink:0"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>Privacy: Your CSV is processed locally in your browser. No data is sent to a server.</span>
+        </div>
+        <div class="upload-btn-row">
+          <label class="upload-btn-main" for="csv-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            Choose CSV File
+          </label>
+        </div>
+        <input type="file" id="csv-input" accept=".csv">
+        <div id="upload-status"></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<div class="footer">
+  Includes: Dividend · Property · Interest &nbsp;|&nbsp; Capital payments excluded<br>
+  <span id="footer-note">Built-in data · Upload CSV to refresh</span>
+</div>
+
+<script>
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const DIV_TYPES=['DIVIDEND','PROPERTY','INTEREST'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const GREEN='#00c896', BLUE='#2563eb', AMBER='#f59e0b', RED='#ef4444', SLATE='#64748b';
+const TYPE_COLORS={DIVIDEND:GREEN, PROPERTY:BLUE, INTEREST:AMBER};
+const BAR_COLORS=[GREEN,'#00b585','#00a374','#00907f',BLUE,'#1d55d4','#1748b8',AMBER,'#d97706','#b45309',RED,'#dc2626','#b91c1c','#9f1d1d','#881b1b','#047857','#065f46','#6366f1','#4f46e5','#7c3aed','#0ea5e9','#0284c7','#0369a1','#64748b','#475569'];
+
+Chart.defaults.color='#94a3b8';
+Chart.defaults.font.family='Inter';
+Chart.defaults.font.size=10;
+
+let CHARTS={};
+function destroyCharts(){ Object.values(CHARTS).forEach(c=>c&&c.destroy()); CHARTS={}; }
+
+// ─── SEED DATA ────────────────────────────────────────────────────────────────
+const SEED={
+  monthly:[
+    {y:2023,m:3,v:1.13},{y:2023,m:4,v:12.39},{y:2023,m:5,v:63.67},{y:2023,m:6,v:96.12},
+    {y:2023,m:7,v:93.0},{y:2023,m:8,v:117.24},{y:2023,m:9,v:254.95},{y:2023,m:10,v:270.66},
+    {y:2023,m:11,v:185.74},{y:2023,m:12,v:218.75},
+    {y:2024,m:1,v:192.42},{y:2024,m:2,v:149.99},{y:2024,m:3,v:241.17},{y:2024,m:4,v:148.91},
+    {y:2024,m:5,v:426.08},{y:2024,m:6,v:376.31},{y:2024,m:7,v:594.80},{y:2024,m:8,v:272.89},
+    {y:2024,m:9,v:326.05},{y:2024,m:10,v:304.63},{y:2024,m:11,v:296.55},{y:2024,m:12,v:329.62},
+    {y:2025,m:1,v:199.51},{y:2025,m:2,v:205.29},{y:2025,m:3,v:424.66},{y:2025,m:4,v:192.41},
+    {y:2025,m:5,v:525.13},{y:2025,m:6,v:692.11},{y:2025,m:7,v:266.06},{y:2025,m:8,v:326.66},
+    {y:2025,m:9,v:428.32},{y:2025,m:10,v:293.13},{y:2025,m:11,v:506.98},{y:2025,m:12,v:338.70},
+    {y:2026,m:1,v:368.85},{y:2026,m:2,v:100.16}
+  ],
+  byType:{DIVIDEND:8239.43,PROPERTY:376.73,INTEREST:234.40},
+  top15:[
+    {n:'Legal & General',v:275.93},{n:'Renewables Infrastructure',v:260.40},
+    {n:'Foresight Solar',v:241.62},{n:'Serica',v:236.05},{n:'Cordiant Digital',v:234.81},
+    {n:'Aviva',v:191.97},{n:'NextEnergy Solar',v:176.59},{n:'HICL Infrastructure',v:168.00},
+    {n:'GSF',v:165.92},{n:'SEEIT',v:161.05},{n:'Octopus Renewables',v:158.13},
+    {n:'SDCL Efficiency',v:155.12},{n:'Phoenix Group',v:152.94},{n:'Bluefield',v:147.76},
+    {n:'Greencoat UK',v:145.20},{n:'Foresight Environmental',v:144.81},
+    {n:'Intl Public Partnerships',v:143.70},{n:'Diverse Income',v:114.91},
+    {n:'GCP Infrastructure',v:112.05},{n:'Liontrust',v:106.93},{n:'VPC Specialty',v:105.00},
+    {n:'Duke Capital',v:94.88},{n:'Tritax Eurobox',v:92.94},{n:'Real Estate Invest',v:91.80},
+    {n:'Supermarket Income',v:91.27}
+  ],
+  total:8850.56, holdings:248, payments:1222,
+  latestFull:2025, latestFullTotal:4199.05, prevYearTotal:2651.91,
+  dateRange:'Mar 2023 – Feb 2026'
+};
+
+// ─── CSV PARSER ───────────────────────────────────────────────────────────────
+function parseCSVLine(line){
+  const r=[]; let c='',q=false;
+  for(const ch of line){
+    if(ch==='"') q=!q;
+    else if(ch===','&&!q){r.push(c);c='';}
+    else c+=ch;
+  }
+  r.push(c); return r;
+}
+
+function findCol(hdr,cands){
+  for(const c of cands){
+    const i=hdr.findIndex(h=>h.trim().replace(/"/g,'').toLowerCase()===c.toLowerCase());
+    if(i!==-1) return i;
+  }
+  return -1;
+}
+
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/);
+  if(lines.length<2) throw new Error('CSV appears empty');
+  const hdr=parseCSVLine(lines[0]);
+  const iType  =findCol(hdr,['Type','type']);
+  const iTs    =findCol(hdr,['Timestamp','timestamp','Date','date']);
+  const iAmt   =findCol(hdr,['Total Amount in Account Currency','amount','Amount','Total']);
+  const iTitle =findCol(hdr,['Title','title','name','Name','Description']);
+  if(iType===-1||iTs===-1||iAmt===-1)
+    throw new Error('Cannot find required columns (Type, Timestamp, Total Amount in Account Currency)');
+  const rows=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const cols=parseCSVLine(lines[i]);
+    const type=(cols[iType]||'').trim().replace(/"/g,'').toUpperCase();
+    if(!DIV_TYPES.includes(type)) continue;
+    const dt=new Date(cols[iTs]||'');
+    if(isNaN(dt.getTime())) continue;
+    const amount=parseFloat(cols[iAmt]);
+    if(isNaN(amount)||amount<=0) continue;
+    rows.push({title:iTitle>=0?(cols[iTitle]||'Unknown').trim().replace(/"/g,''):'Unknown',type,year:dt.getFullYear(),month:dt.getMonth()+1,amount});
+  }
+  if(!rows.length) throw new Error('No dividend, property or interest rows found');
+  return rows;
+}
+
+// ─── AGGREGATION ──────────────────────────────────────────────────────────────
+function aggregate(rows){
+  const mMap={},tMap={},hMap={};
+  rows.forEach(r=>{
+    const k=`${r.year}-${String(r.month).padStart(2,'0')}`;
+    mMap[k]=(mMap[k]||0)+r.amount;
+    tMap[r.type]=(tMap[r.type]||0)+r.amount;
+    // Top holdings: DIVIDEND payments only (excludes property/interest)
+    if(r.type==='DIVIDEND') hMap[r.title]=(hMap[r.title]||0)+r.amount;
+  });
+  const monthly=Object.entries(mMap).map(([k,v])=>{const[y,m]=k.split('-').map(Number);return{y,m,v};}).sort((a,b)=>a.y!==b.y?a.y-b.y:a.m-b.m);
+  const top15=Object.entries(hMap).map(([n,v])=>({n,v})).sort((a,b)=>b.v-a.v).slice(0,25);
+  const total=rows.reduce((s,r)=>s+r.amount,0);
+  const holdings=new Set(rows.map(r=>r.title)).size;
+  const curY=new Date().getFullYear();
+  const allY=[...new Set(rows.map(r=>r.year))].sort();
+  const fullY=allY.filter(y=>y<curY);
+  const lf=fullY.length?fullY[fullY.length-1]:allY[allY.length-1];
+  const lft=rows.filter(r=>r.year===lf).reduce((s,r)=>s+r.amount,0);
+  const pyt=rows.filter(r=>r.year===lf-1).reduce((s,r)=>s+r.amount,0);
+  const dts=rows.map(r=>new Date(r.year,r.month-1));
+  const fmt=d=>MONTHS[d.getMonth()]+' '+d.getFullYear();
+  return{monthly,byType:tMap,top15,total,holdings,payments:rows.length,latestFull:lf,latestFullTotal:lft,prevYearTotal:pyt,dateRange:fmt(new Date(Math.min(...dts)))+' – '+fmt(new Date(Math.max(...dts)))};
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function gbp(v){return'£'+Math.round(v).toLocaleString('en-GB');}
+function gbp2(v){return'£'+v.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function tip(cb){return{backgroundColor:'#0f172a',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,padding:{x:12,y:10},cornerRadius:10,titleColor:'rgba(255,255,255,0.6)',titleFont:{family:'JetBrains Mono',size:10},bodyColor:'#fff',bodyFont:{family:'Inter',size:13,weight:'700'},callbacks:{label:cb}};}
+
+function tipFull(labelCb, titleCb){
+  return{backgroundColor:'#0f172a',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,padding:{x:12,y:10},cornerRadius:10,titleColor:'rgba(255,255,255,0.6)',titleFont:{family:'JetBrains Mono',size:10},bodyColor:'#fff',bodyFont:{family:'Inter',size:13,weight:'700'},callbacks:{title:titleCb||undefined,label:labelCb}};
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function render(d, fromCSV){
+  const{monthly,byType,top15,total,holdings,payments,latestFull,latestFullTotal,prevYearTotal,dateRange}=d;
+
+  // Animate cards on CSV upload
+  if(fromCSV){
+    document.querySelectorAll('.card').forEach((c,i)=>{
+      c.classList.remove('chart-animate');
+      void c.offsetWidth; // force reflow
+      c.style.animationDelay=(0.05*i)+'s';
+      c.classList.add('chart-animate');
+      setTimeout(()=>c.classList.remove('chart-animate'), 800+i*50);
+    });
+  }
+
+  // Header / topbar
+  document.getElementById('topbar-range').textContent=dateRange;
+  document.getElementById('hero-sub').textContent=dateRange+' · All figures in GBP';
+
+  // KPIs
+  document.getElementById('kpi-total').textContent=gbp(total);
+  document.getElementById('kpi-total-sub').textContent=holdings+' holdings';
+  document.getElementById('kpi-year').textContent=gbp(latestFullTotal);
+  const yoy=prevYearTotal>0?(latestFullTotal-prevYearTotal)/prevYearTotal*100:null;
+  const yoyEl=document.getElementById('kpi-yoy');
+  if(yoy!==null){
+    yoyEl.textContent=(yoy>=0?'↑ ':'↓ ')+Math.abs(yoy).toFixed(1)+'% vs '+(latestFull-1);
+    yoyEl.className='hero-kpi-badge '+(yoy>=0?'up':'down');
+  } else { yoyEl.textContent=latestFull+' full year'; yoyEl.className='hero-kpi-badge info'; }
+  document.getElementById('kpi-avg').textContent=gbp(latestFullTotal/12);
+  document.getElementById('kpi-holdings').textContent=holdings.toLocaleString();
+  document.getElementById('kpi-payments').textContent=payments.toLocaleString()+' payments';
+
+  // Monthly tag
+  document.getElementById('monthly-total-tag').textContent='Total '+gbp(total);
+
+  // Peak
+  const peak=monthly.reduce((b,x)=>x.v>b.v?x:b,monthly[0]);
+  document.getElementById('peak-month').textContent=MONTHS[peak.m-1]+' '+peak.y;
+  document.getElementById('peak-val').textContent=gbp(peak.v);
+
+  // Footer
+  document.getElementById('footer-note').textContent=fromCSV?`Refreshed from CSV · ${new Date().getFullYear()} data may be partial`:'Built-in data · Upload CSV below to refresh';
+
+  // ── PROJECTION CARD ──
+  const curYear=new Date().getFullYear();
+  const now=new Date();
+  const last12cutoff=new Date(now.getFullYear(),now.getMonth()-11,1);
+  const last12=monthly.filter(d=>{const dt=new Date(d.y,d.m-1);return dt>=last12cutoff;});
+  const prev12cutoff=new Date(last12cutoff.getFullYear(),last12cutoff.getMonth()-12,1);
+  const prev12=monthly.filter(d=>{const dt=new Date(d.y,d.m-1);return dt>=prev12cutoff&&dt<last12cutoff;});
+  const last12total=last12.reduce((s,d)=>s+d.v,0);
+  const prev12total=prev12.reduce((s,d)=>s+d.v,0);
+  const projGrowth=prev12total>0?(last12total-prev12total)/prev12total*100:null;
+  document.getElementById('proj-next12').textContent=gbp(last12total);
+  document.getElementById('proj-monthly').textContent='≈ '+gbp(last12total/12)+' / month';
+  document.getElementById('proj-growth-val').textContent=gbp(last12total);
+  const pgBadge=document.getElementById('proj-growth-badge');
+  if(projGrowth!==null){
+    pgBadge.textContent=(projGrowth>=0?'↑ ':'↓ ')+Math.abs(projGrowth).toFixed(1)+'% vs prev 12 months';
+    pgBadge.style.background=projGrowth>=0?'rgba(0,200,150,0.15)':'rgba(239,68,68,0.12)';
+    pgBadge.style.color=projGrowth>=0?'var(--green-dk)':'var(--red)';
+  }
+  document.getElementById('proj-note').textContent=`Based on last 12 months of data (${last12.length} months). Projection assumes similar income patterns continue. Past income does not guarantee future returns.`;
+
+  // ── COMPARISON CARD ──
+  const curMonths=monthly.filter(d=>d.y===latestFull);
+  const prevMonths=monthly.filter(d=>d.y===(latestFull-1));
+  const curBest=curMonths.length?curMonths.reduce((b,x)=>x.v>b.v?x:b,curMonths[0]):null;
+  const prevBest=prevMonths.length?prevMonths.reduce((b,x)=>x.v>b.v?x:b,prevMonths[0]):null;
+  document.getElementById('cmp-cur-year').textContent=latestFull;
+  document.getElementById('cmp-prev-year').textContent=latestFull-1;
+  document.getElementById('cmp-cur-total').textContent=gbp(latestFullTotal);
+  document.getElementById('cmp-prev-total').textContent=gbp(prevYearTotal);
+  document.getElementById('cmp-cur-avg').textContent=gbp(latestFullTotal/12);
+  document.getElementById('cmp-prev-avg').textContent=prevYearTotal>0?gbp(prevYearTotal/12):'—';
+  document.getElementById('cmp-cur-best').textContent=curBest?`${MONTHS[curBest.m-1]} (${gbp(curBest.v)})`:'—';
+  document.getElementById('cmp-prev-best').textContent=prevBest?`${MONTHS[prevBest.m-1]} (${gbp(prevBest.v)})`:'—';
+  const delta=latestFullTotal-prevYearTotal;
+  const deltaPct=prevYearTotal>0?delta/prevYearTotal*100:null;
+  const deltaEl=document.getElementById('cmp-delta-abs');
+  const deltaPctEl=document.getElementById('cmp-delta-pct');
+  deltaEl.textContent=(delta>=0?'+':'')+gbp(delta);
+  deltaEl.className='compare-delta-val '+(delta>=0?'pos':'neg');
+  if(deltaPct!==null){
+    deltaPctEl.textContent=(deltaPct>=0?'+':'')+deltaPct.toFixed(1)+'%';
+    deltaPctEl.className='compare-delta-val '+(deltaPct>=0?'pos':'neg');
+  } else { deltaPctEl.textContent=''; }
+
+  destroyCharts();
+
+  const years=[...new Set(monthly.map(d=>d.y))].sort();
+  const curY=new Date().getFullYear();
+
+  // ── LINE CHART ──
+  const lineLabels=monthly.map(d=>{
+    const l=MONTHS[d.m-1].slice(0,3);
+    return d.m===1?`${l} '${String(d.y).slice(2)}`:l;
+  });
+  CHARTS.line=new Chart(document.getElementById('lineChart'),{
+    type:'line',
+    data:{labels:lineLabels,datasets:[{
+      data:monthly.map(d=>d.v),
+      borderColor:GREEN, borderWidth:2,
+      pointRadius:2.5, pointBackgroundColor:GREEN, pointBorderColor:'#fff', pointBorderWidth:1.5,
+      fill:true, tension:0.4,
+      backgroundColor:ctx=>{
+        const g=ctx.chart.ctx.createLinearGradient(0,0,0,200);
+        g.addColorStop(0,'rgba(0,200,150,0.18)'); g.addColorStop(1,'rgba(0,200,150,0)'); return g;
+      }
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tipFull(ctx=>'  '+gbp2(ctx.raw), ctx=>ctx[0]?.label||'')},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},ticks:{maxTicksLimit:10,maxRotation:0,color:'#94a3b8'}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},ticks:{callback:v=>'£'+(v>=1000?(v/1000).toFixed(0)+'k':v),color:'#94a3b8'}}
+      }}
+  });
+
+  // ── ANNUAL BAR ──
+  const yearTotals=years.map(y=>monthly.filter(d=>d.y===y).reduce((s,d)=>s+d.v,0));
+  CHARTS.annual=new Chart(document.getElementById('annualChart'),{
+    type:'bar',
+    data:{labels:years.map(y=>y===curY?y+'*':String(y)),datasets:[{
+      data:yearTotals, borderRadius:8, borderSkipped:false,
+      backgroundColor:years.map((y,i)=>y===curY?'rgba(0,200,150,0.25)':GREEN),
+      borderColor:years.map((y,i)=>y===curY?'rgba(0,200,150,0.5)':GREEN),
+      borderWidth:1.5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tipFull(v=>'  '+gbp2(v.raw), ctx=>ctx[0]?.label||'')},
+      scales:{
+        x:{grid:{display:false},border:{display:false},ticks:{color:'#94a3b8'}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},ticks:{callback:v=>'£'+(v>=1000?(v/1000).toFixed(0)+'k':v),color:'#94a3b8'}}
+      }}
+  });
+
+  // ── QUARTERLY ──
+  const qPal={};
+  const qColors=[GREEN,'#2563eb','#f59e0b','#a855f7'];
+  years.forEach((y,i)=>qPal[y]=qColors[i%4]);
+  const qData=[];
+  years.forEach(y=>{
+    for(let q=1;q<=4;q++){
+      const ms=[1,2,3].map(x=>(q-1)*3+x);
+      const v=monthly.filter(d=>d.y===y&&ms.includes(d.m)).reduce((s,d)=>s+d.v,0);
+      if(v>0) qData.push({y,q,v});
+    }
+  });
+  CHARTS.quarter=new Chart(document.getElementById('quarterChart'),{
+    type:'bar',
+    data:{labels:qData.map(d=>`Q${d.q}'${String(d.y).slice(2)}`),datasets:[{
+      data:qData.map(d=>d.v), borderRadius:6, borderSkipped:false,
+      backgroundColor:qData.map(d=>qPal[d.y]+'cc'),
+      borderColor:qData.map(d=>qPal[d.y]), borderWidth:1.5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:tipFull(v=>'  '+gbp2(v.raw), ctx=>ctx[0]?.label||'')},
+      scales:{
+        x:{grid:{display:false},border:{display:false},ticks:{maxRotation:45,color:'#94a3b8',font:{size:9}}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},border:{display:false},ticks:{callback:v=>'£'+v,color:'#94a3b8'}}
+      }}
+  });
+
+  // ── HEATMAP ──
+  const hmDiv=document.getElementById('heatmap'); hmDiv.innerHTML='';
+  const hmMap={};
+  monthly.forEach(d=>{if(!hmMap[d.y])hmMap[d.y]={};hmMap[d.y][d.m]=d.v;});
+  const maxV=Math.max(...monthly.map(d=>d.v));
+  const grid=document.createElement('div'); grid.className='hm-grid';
+  grid.appendChild(document.createElement('div'));
+  MONTHS.forEach(mn=>{const l=document.createElement('div');l.className='hm-ml';l.textContent=mn[0];grid.appendChild(l);});
+  years.forEach(yr=>{
+    const yl=document.createElement('div');yl.className='hm-yl';yl.textContent=yr;grid.appendChild(yl);
+    for(let m=1;m<=12;m++){
+      const cell=document.createElement('div'); cell.className='hm-cell';
+      const val=(hmMap[yr]&&hmMap[yr][m])||0;
+      const t=val/maxV;
+      if(!val) cell.style.background='#f1f5f9';
+      else {
+        const r=Math.round(0+(37-0)*t), g=Math.round(200+(99-200)*t), b=Math.round(150+(235-150)*t);
+        cell.style.background=`rgba(${r},${g},${b},${0.25+t*0.75})`;
+      }
+      cell.setAttribute('data-tip',val>0?`${MONTHS[m-1]} ${yr}: £${val.toFixed(2)}`:'No data');
+      grid.appendChild(cell);
+    }
+  });
+  hmDiv.appendChild(grid);
+  const hmLeg=document.createElement('div');
+  hmLeg.style.cssText='display:flex;align-items:center;gap:8px;margin-top:10px;justify-content:flex-end;';
+  hmLeg.innerHTML='<span style="font-family:JetBrains Mono,monospace;font-size:9px;color:#94a3b8;letter-spacing:1px">Low</span><div style="width:60px;height:5px;border-radius:3px;background:linear-gradient(to right,rgba(0,200,150,0.2),#00c896)"></div><span style="font-family:JetBrains Mono,monospace;font-size:9px;color:#94a3b8;letter-spacing:1px">High</span>';
+  hmDiv.appendChild(hmLeg);
+
+  // ── DONUT ──
+  const typeEntries=Object.entries(byType).sort((a,b)=>b[1]-a[1]);
+  const tColors=typeEntries.map(([t])=>TYPE_COLORS[t]||SLATE);
+  CHARTS.donut=new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:typeEntries.map(([t])=>t),datasets:[{data:typeEntries.map(([,v])=>v),backgroundColor:tColors,borderWidth:0,hoverOffset:4}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+      plugins:{legend:{display:false},tooltip:tipFull(v=>'  '+gbp2(v.raw), ctx=>ctx[0]?.label||'')}}
+  });
+  const pillsDiv=document.getElementById('type-pills');
+  pillsDiv.innerHTML=typeEntries.map(([t,v],i)=>`
+    <div class="type-pill">
+      <div class="type-dot" style="background:${tColors[i]}"></div>
+      <span class="type-name">${t[0]+t.slice(1).toLowerCase()}</span>
+      <span class="type-val">${gbp(v)}</span>
+    </div>`).join('');
+
+  // ── TOP 25 BARS (DIVIDEND only) ──
+  const topDiv=document.getElementById('topBars'); topDiv.innerHTML='';
+  const maxH=top15[0]?.v||1;
+  top15.forEach((h,i)=>{
+    const el=document.createElement('div'); el.className='mini-bar-row';
+    el.innerHTML=`<div class="mini-bar-label" title="${h.n}">${h.n}</div><div class="mini-bar-track"><div class="mini-bar-fill" style="background:${BAR_COLORS[i]||GREEN}"></div></div><div class="mini-bar-val">${gbp(h.v)}</div>`;
+    topDiv.appendChild(el);
+    setTimeout(()=>el.querySelector('.mini-bar-fill').style.width=(h.v/maxH*100)+'%',300+i*35);
+  });
+
+  // ── GROWTH TABS ──
+  document.querySelectorAll('#growth-tabs .seg-tab').forEach(btn=>{
+    btn.onclick=()=>{
+      document.querySelectorAll('#growth-tabs .seg-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const show=btn.dataset.chart;
+      document.getElementById('annualChart').style.display=show==='annual'?'block':'none';
+      document.getElementById('quarterChart').style.display=show==='quarterly'?'block':'none';
+    };
+  });
+}
+
+// ─── FILE HANDLING ────────────────────────────────────────────────────────────
+function handleFile(file){
+  if(!file){showStatus('No file selected','err');return;}
+  if(!file.name.toLowerCase().endsWith('.csv')){showStatus('Please upload a .csv file','err');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const rows=parseCSV(e.target.result);
+      render(aggregate(rows),true);
+      showStatus('✓ '+rows.length.toLocaleString()+' payments loaded from '+file.name,'ok');
+    }catch(err){showStatus('⚠ '+err.message,'err');}
+  };
+  r.readAsText(file);
+}
+
+function showStatus(msg,cls){
+  const el=document.getElementById('upload-status');
+  el.textContent=msg; el.className=cls;
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+document.getElementById('csv-input').addEventListener('change',e=>{handleFile(e.target.files[0]);e.target.value='';});
+
+const uc=document.getElementById('upload-card');
+uc.addEventListener('dragover',e=>{e.preventDefault();uc.classList.add('drag-over');});
+uc.addEventListener('dragleave',()=>uc.classList.remove('drag-over'));
+uc.addEventListener('drop',e=>{e.preventDefault();uc.classList.remove('drag-over');handleFile(e.dataTransfer?.files[0]);});
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render(SEED,false);
+</script>
+</body>
+</html>
